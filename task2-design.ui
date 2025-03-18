@@ -1,0 +1,624 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1528</width>
+    <height>824</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+  </property>
+  <widget class="QWidget" name="mainCentralWidget">
+   <property name="styleSheet">
+    <string notr="true">#controlPanelGroup{
+background-color:#002333;
+display:flex;
+flex-direction:column;
+}
+</string>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QWidget" name="mainContentWidget" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>800</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:#0B192C;
+</string>
+      </property>
+      <layout class="QVBoxLayout" name="mainVerticalLayout">
+       <property name="spacing">
+        <number>50</number>
+       </property>
+       <property name="topMargin">
+        <number>50</number>
+       </property>
+       <property name="bottomMargin">
+        <number>80</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="imageDisplayContainer" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
+          <item>
+           <widget class="QWidget" name="originalwidget" native="true">
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <widget class="QLabel" name="originalImageLabel">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color:#002333;
+font-size:20px;
+color:white;</string>
+               </property>
+               <property name="text">
+                <string>Original Image</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="OriginalImageLabel">
+               <property name="styleSheet">
+                <string notr="true">background-color: white;
+border-radius: 20px;
+border: 3px solid #002333;
+margin: 10px;  
+padding: 15px; 
+background-color: transparent;
+border: 2px solid white;
+
+</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="outputwidget" native="true">
+            <layout class="QVBoxLayout" name="verticalLayout_8">
+             <item>
+              <widget class="QWidget" name="outwidget" native="true">
+               <layout class="QVBoxLayout" name="verticalLayout_7">
+                <item>
+                 <widget class="QLabel" name="outputLabel">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">color:#002333;
+font-size:20px;
+color:white;</string>
+                  </property>
+                  <property name="text">
+                   <string>Output </string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="OutputImageLabel">
+                  <property name="styleSheet">
+                   <string notr="true">background-color: white;
+border-radius: 20px;
+border: 3px solid #002333;
+margin: 10px;  
+padding: 15px; 
+background-color: transparent;
+border: 2px solid white;
+</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget" native="true">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="LoadImageButton">
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">
+QWidget QPushButton:hover {
+    background-color: #113444;
+};
+
+QWidget QPushButton:pressed {
+    background-color: #004455;
+}
+;
+background-color: #224779;
+border-radius: 10px;
+font-size: 16px;
+font-weight: bold;
+text-align: center;
+color:#DEEFE7;
+border: 1px solid white;
+
+</string>
+            </property>
+            <property name="text">
+             <string>Load Image</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="resetButton">
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">
+QWidget QPushButton:hover {
+    background-color: #113444;
+};
+
+QWidget QPushButton:pressed {
+    background-color: #004455;
+}
+;
+background-color: #224779;
+border-radius: 10px;
+font-size: 16px;
+font-weight: bold;
+text-align: center;
+color:#DEEFE7;
+border: 1px solid white;
+
+</string>
+            </property>
+            <property name="text">
+             <string>Reset</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="controlPanelGroup">
+      <property name="maximumSize">
+       <size>
+        <width>400</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QWidget QPushButton , QWidget QComboBox{
+    background-color: #0B192C;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+}
+
+QWidget QPushButton:hover {
+    background-color: #FFFFFF;
+}
+
+QWidget QPushButton:pressed {
+    background-color: #B4BEC9;
+}
+QWidget QLabel{
+text-align:center;
+font-size:20px;
+color:#DEEFE7;
+font-weight:bold;
+}
+</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QGroupBox" name="snakeContourGroup">
+         <property name="styleSheet">
+          <string notr="true">color: white;
+border: 1px solid white;
+border-radius:10px;
+font: 75 13pt &quot;MS Shell Dlg 2&quot;;
+background-color:#0B192C;
+font-weight: bold;
+
+</string>
+         </property>
+         <property name="title">
+          <string>Snake Contour</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <layout class="QVBoxLayout" name="mixerModeLayout">
+          <property name="topMargin">
+           <number>25</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="alphaLayout">
+            <item>
+             <widget class="QLabel" name="label_31">
+              <property name="styleSheet">
+               <string notr="true">border:none;
+font: 13pt &quot;MS Shell Dlg 2&quot;;
+padding-left:10px;</string>
+              </property>
+              <property name="text">
+               <string>Alpha</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="alphaValue">
+              <property name="styleSheet">
+               <string notr="true">padding:5px;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="betaLayout">
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="styleSheet">
+               <string notr="true">border:none;
+font: 13pt &quot;MS Shell Dlg 2&quot;;
+padding-left:10px;</string>
+              </property>
+              <property name="text">
+               <string>Beta</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="betaValue">
+              <property name="styleSheet">
+               <string notr="true">padding:5px;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="gammaLayout">
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="styleSheet">
+               <string notr="true">border:none;
+font: 13pt &quot;MS Shell Dlg 2&quot;;
+padding-left:10px;</string>
+              </property>
+              <property name="text">
+               <string>Gamma</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="gammaValue">
+              <property name="styleSheet">
+               <string notr="true">padding:5px;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="houghTransformModeGroup">
+         <property name="styleSheet">
+          <string notr="true">color: rgb(255, 255, 255);
+border: 1px solid white;
+border-radius:10px;
+font: 75 13pt &quot;MS Shell Dlg 2&quot;;
+background-color: #0B192C;
+font-weight: bold;</string>
+         </property>
+         <property name="title">
+          <string>Hough Transform </string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="noiseModeLayout">
+          <property name="topMargin">
+           <number>25</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="shapeSelectionLayout">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="styleSheet">
+               <string notr="true">border:none;
+font: 13pt &quot;MS Shell Dlg 2&quot;;
+padding-left:10px;</string>
+              </property>
+              <property name="text">
+               <string>Select Shape</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="shapeTybeComboBox">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>50</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">text-align:center;
+color: rgb(0, 0, 0);
+font: 11pt &quot;MS Shell Dlg 2&quot;;
+color:white;
+background-color:transparent;</string>
+              </property>
+              <property name="editable">
+               <bool>false</bool>
+              </property>
+              <item>
+               <property name="text">
+                <string>Line</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Circle</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Ellipses</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="houghThresholdLayout">
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="styleSheet">
+               <string notr="true">border:none;
+font: 13pt &quot;MS Shell Dlg 2&quot;;
+padding-left:10px;</string>
+              </property>
+              <property name="text">
+               <string>Hough Threshold</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="houghThresholdSlider">
+              <property name="styleSheet">
+               <string notr="true">border:none;</string>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="cannyEdgeDetector">
+         <property name="styleSheet">
+          <string notr="true">border: 1px solid white;
+border-radius:10px;
+color: rgb(255, 255, 255);
+font: 75 13pt &quot;MS Shell Dlg 2&quot;;
+background-color: #0B192C;
+font-weight:bold;</string>
+         </property>
+         <property name="title">
+          <string>canny Edge Detector</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="otherModesOuterLayout">
+          <property name="topMargin">
+           <number>7</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="sigmaLayout">
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="styleSheet">
+               <string notr="true">border:none;
+font: 13pt &quot;MS Shell Dlg 2&quot;;
+padding:10px;
+margin-right:70px;
+</string>
+              </property>
+              <property name="text">
+               <string>sigma</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="sigmaSlider">
+              <property name="styleSheet">
+               <string notr="true">border:none;</string>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="highThresholdLayout">
+            <item>
+             <widget class="QLabel" name="label_6">
+              <property name="styleSheet">
+               <string notr="true">border:none;
+font: 13pt &quot;MS Shell Dlg 2&quot;;
+padding-left:10px;</string>
+              </property>
+              <property name="text">
+               <string>HighThreshold</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="highThresholdSlider">
+              <property name="styleSheet">
+               <string notr="true">border:none;</string>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="lowThresholdLayout">
+            <item>
+             <widget class="QLabel" name="label_7">
+              <property name="styleSheet">
+               <string notr="true">border:none;
+font: 13pt &quot;MS Shell Dlg 2&quot;;
+padding-left:10px;</string>
+              </property>
+              <property name="text">
+               <string>Low Threshold</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="horizontalSlider">
+              <property name="styleSheet">
+               <string notr="true">border:none;</string>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
