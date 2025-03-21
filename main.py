@@ -4,16 +4,15 @@ from MainWindowUI import MainWindowUI
 import asyncio
 from qasync import QEventLoop
 from snake_2 import SnakeContour
+from Canny import CannyFilter
 
 async def main():
-    # Initialize classes    
     snake = SnakeContour()
-    ###
+    canny = CannyFilter()
     
     app = QApplication(sys.argv)
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
-    
     
     window = MainWindowUI()
     window.show()
