@@ -9,6 +9,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import logging
 import numpy as np
 import math
+import cv2
 
 logging.basicConfig(
     filename="app.log",
@@ -47,6 +48,8 @@ class MainWindowUI(QMainWindow):
         self.ui.spinBoxPosY.valueChanged.connect(self.set_contour)
         self.ui.spinBoxRadius.valueChanged.connect(self.set_contour)
         self.ui.btnApplySnake.clicked.connect(self.apply_snake)
+        self.ui.btnApplyHough.clicked.connect(self.apply_hough_transform)
+
         
     def _init_modes(self):
         if "tabSnakeContour" == self.ui.tabWidget.currentWidget().objectName():
@@ -324,3 +327,139 @@ class MainWindowUI(QMainWindow):
     
     def clear_logging(self):
         self.ui.loggingLabel.setText("")
+
+
+    def apply_hough_transform(self):
+        """Apply Hough Transform based on user-selected parameters."""
+        if self.image is None:
+            logging.warning("No image loaded for Hough Transform")
+            return
+
+        # Get user inputs
+        shape_type = self.ui.comboShapeSelection.currentText()
+        threshold = self.ui.sliderHoughThreshold.value()
+
+        # Convert QPixmap to NumPy array
+        image_np = self.get_NumpyArray()
+        gray_image = cv2.cvtColor(image_np[:, :, :3], cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+
+        # Apply edge detection
+        edges = cv2.Canny(gray_image, 50, 150)
+
+        # Perform Hough Transform based on selected shape
+        if shape_type == "Line":
+            result_image = self.detect_and_draw_lines(image_np, threshold=threshold)
+        elif shape_type == "Circle":
+            result_image = self.detect_and_draw_hough_circles(image_np, edges)
+        elif shape_type == "Ellipse":
+            result_image = self.detect_and_draw_hough_ellipses(image_np, edges)
+        else:
+            logging.error("Invalid shape type selected")
+            return
+
+        # Convert result back to QPixmap and display
+        self.image_output = self.from_ndarray_to_QPixmap(result_image)
+        self.display_image()
+
+
+    def detect_and_draw_lines(self, original_image, threshold=150, theta_res=1, rho_res=1):
+        # Convert the image to grayscale for edge detection
+        if original_image.ndim == 3:
+            gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray_image = original_image
+
+        # Apply Canny edge detection
+        edges = cv2.Canny(gray_image, 50, 150)
+
+        # Get image dimensions
+        height, width = edges.shape
+
+        # Calculate the maximum possible value for rho (image diagonal)
+        diagonal = int(np.sqrt(height ** 2 + width ** 2))
+
+        # Define rho and theta ranges
+        rhos = np.arange(-diagonal, diagonal, rho_res)
+        thetas = np.deg2rad(np.arange(-90, 90, theta_res))
+
+        # Create the accumulator array (votes)
+        accumulator = np.zeros((len(rhos), len(thetas)), dtype=np.int32)
+
+        # Get edge points
+        edge_points = np.argwhere(edges > 0)
+
+        # Precompute cos(theta) and sin(theta) values
+        cos_thetas = np.cos(thetas)
+        sin_thetas = np.sin(thetas)
+
+        # Voting process (optimized)
+        for y, x in edge_points:  # For each edge pixel
+            rhos_calc = (x * cos_thetas + y * sin_thetas).astype(int)  # Compute rho values for all thetas at once
+            rho_indices = np.clip(rhos_calc + diagonal, 0, len(rhos) - 1)  # Map rho to index
+            accumulator[rho_indices, np.arange(len(thetas))] += 1  # Increment votes in one operation
+
+        # Extract lines based on threshold
+        detected_lines = np.argwhere(accumulator > threshold)
+
+        # Create a copy of the original image to draw lines on
+        processed_image = original_image.copy()
+
+        # Draw the detected lines
+        for rho_idx, theta_idx in detected_lines:
+            rho = rhos[rho_idx]
+            theta = thetas[theta_idx]
+
+            # Convert (rho, theta) to two points for line drawing
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            x1 = int(x0 + 1000 * (-b))
+            y1 = int(y0 + 1000 * (a))
+            x2 = int(x0 - 1000 * (-b))
+            y2 = int(y0 - 1000 * (a))
+
+            # Draw the line on the processed image
+            cv2.line(processed_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+        return processed_image
+
+
+
+    def detect_and_draw_hough_circles(self, image_np, edges):
+        # Work on a copy of the original image
+        output_image = image_np.copy()
+
+        # Find contours in the edge map
+        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Iterate over contours
+        for contour in contours:
+            if len(contour) >= 5:  # Minimum number of points required to fit a circle
+                # Fit a minimum enclosing circle to the contour
+                (x, y), radius = cv2.minEnclosingCircle(contour)
+                center = (int(x), int(y))
+                radius = int(radius)
+
+                # Draw the circle on the output image
+                cv2.circle(output_image, center, radius, (0, 255, 0), 2)
+
+        return output_image
+
+
+
+
+
+
+    def detect_and_draw_hough_ellipses(self, image_np, edges):
+        output_image = image_np.copy()  # Work on a copy of the original image
+        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        for contour in contours:
+            if len(contour) >= 5:  # Minimum number of points required to fit an ellipse
+                ellipse = cv2.fitEllipse(contour)
+                cv2.ellipse(output_image, ellipse, (0, 255, 0), 2)  # Draw in green
+        return output_image
+
+    
+
+
