@@ -40,7 +40,7 @@ class CannyFilter :
 
 
         # Publish the result to the main window
-        pub.sendMessage("update image", image=edgyImage)
+        pub.sendMessage("canny.output", image=edgyImage)
         
 
     def gradientOperator(self, filteredImage):

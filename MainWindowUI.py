@@ -40,7 +40,12 @@ class MainWindowUI(QMainWindow):
         pub.subscribe(self.set_initial_contour, "image.initialContour")
         pub.subscribe(self.add_logging, "ui.logging")
         pub.subscribe(self.clear_logging, "ui.clearLogging")
+        pub.subscribe(self.cannyoutput, "canny.output")
 
+
+    def cannyoutput(self, image):
+        self.image_output = self.from_ndarray_to_QPixmap(image)
+        self.display_image()
 
     def _bind_ui_events(self):
         self.ui.btnLoadImage.clicked.connect(self.upload_image)
@@ -63,7 +68,7 @@ class MainWindowUI(QMainWindow):
             print(highThreshold)
             print(lowThreshold)
 
-            pub.sendMessage("detect edges", image=self.image ,sigmaValue=sigmaValue, highThreshold=highThreshold, lowThreshold=lowThreshold)
+            pub.sendMessage("detect edges", image=self.get_NumpyArray() ,sigmaValue=sigmaValue, highThreshold=highThreshold, lowThreshold=lowThreshold)
         
         except Exception as e:
             logging.error(f"Error applying edge detection algorithm: {e}")
@@ -284,9 +289,33 @@ class MainWindowUI(QMainWindow):
             logging.error("Attempted to convert None array to QPixmap")
             return None
             
-        height, width, channel = arr.shape
-        bytesPerLine = 4 * width
-        qimage = QImage(arr.data, width, height, bytesPerLine, QImage.Format.Format_RGBA8888)
+        # Check the array shape
+        if len(arr.shape) == 2:  # Grayscale image (height, width)
+            height, width = arr.shape
+            bytesPerLine = width
+            # Create a grayscale QImage (8-bit, 1 channel)
+            qimage = QImage(arr.data, width, height, bytesPerLine, QImage.Format.Format_Grayscale8)
+        elif len(arr.shape) == 3:  # Color image (height, width, channels)
+            height, width, channel = arr.shape
+            bytesPerLine = 4 * width
+            if channel == 1:  # Single channel but in 3D array
+                arr = arr.reshape(height, width)
+                bytesPerLine = width
+                qimage = QImage(arr.data, width, height, bytesPerLine, QImage.Format.Format_Grayscale8)
+            elif channel == 3:  # RGB format
+                # Convert to RGBA by adding alpha channel
+                rgba = cv2.cvtColor(arr, cv2.COLOR_RGB2RGBA)
+                bytesPerLine = 4 * width
+                qimage = QImage(rgba.data, width, height, bytesPerLine, QImage.Format.Format_RGBA8888)
+            elif channel == 4:  # RGBA format
+                qimage = QImage(arr.data, width, height, bytesPerLine, QImage.Format.Format_RGBA8888)
+            else:
+                logging.error(f"Unsupported number of channels: {channel}")
+                return None
+        else:
+            logging.error(f"Unsupported array shape: {arr.shape}")
+            return None
+            
         qpixmap = QPixmap.fromImage(qimage)
         return qpixmap
     
