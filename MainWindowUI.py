@@ -37,23 +37,28 @@ class MainWindowUI(QMainWindow):
     def _bind_events(self):
         pub.subscribe(self.set_snake_output, "image.snakeResult")
         pub.subscribe(self.set_initial_contour, "image.initialContour")
+        pub.subscribe(self.set_hough_output, "hough.result")  # Add this line
         pub.subscribe(self.add_logging, "ui.logging")
         pub.subscribe(self.clear_logging, "ui.clearLogging")
 
     def _bind_ui_events(self):
         self.ui.btnLoadImage.clicked.connect(self.upload_image)
         self.ui.btnReset.clicked.connect(self.reset_image)
-        self.ui.tabWidget.currentChanged.connect(self.init_snake_mode)
+        self.ui.tabWidget.currentChanged.connect(self.on_tab_changed)  # Modify this line
         self.ui.spinBoxPosX.valueChanged.connect(self.set_contour)
         self.ui.spinBoxPosY.valueChanged.connect(self.set_contour)
         self.ui.spinBoxRadius.valueChanged.connect(self.set_contour)
         self.ui.btnApplySnake.clicked.connect(self.apply_snake)
         self.ui.btnApplyHough.clicked.connect(self.apply_hough_transform)
 
+    def on_tab_changed(self, index):
+        """Handle tab widget changes"""
+        current_tab = self.ui.tabWidget.currentWidget().objectName()
         
-    def _init_modes(self):
-        if "tabSnakeContour" == self.ui.tabWidget.currentWidget().objectName():
+        if current_tab == "tabSnakeContour":
             self.init_snake_mode()
+        elif current_tab == "tabHoughTransform":
+            self.init_hough_mode()
 
     def init_snake_mode(self):
         if self.image is None:
@@ -73,6 +78,138 @@ class MainWindowUI(QMainWindow):
             # Set radius to 1/4 of the smallest dimension
             self.ui.spinBoxRadius.setValue(min(width, height) // 4)
             self.set_contour()
+
+    def _init_modes(self):
+        if "tabSnakeContour" == self.ui.tabWidget.currentWidget().objectName():
+            self.init_snake_mode()
+        elif "tabHough" == self.ui.tabWidget.currentWidget().objectName():
+            self.init_hough_mode()
+        elif "tabEdgeDetection" == self.ui.tabWidget.currentWidget().objectName():
+            self.init_edge_detection_mode()
+
+    def init_edge_detection_mode(self):
+        """Initialize Edge Detection mode"""
+        if self.image is None:
+            logging.warning("No image loaded for Edge Detection mode")
+            return
+
+    def init_hough_mode(self):
+        """Initialize Hough Transform mode"""
+        if self.image is None:
+            logging.warning("No image loaded for Hough Transform mode")
+            return
+            
+        # Send the image to the Hough Transform processor
+        image_np = self.get_NumpyArray()
+        pub.sendMessage("hough.loadImage", image=image_np)
+        
+        # Set default UI values
+        self.ui.comboShapeSelection.setCurrentText("Line")
+        self.ui.sliderHoughThreshold.setValue(50)
+        
+        # Connect value display for threshold slider
+        self.ui.sliderHoughThreshold.valueChanged.connect(
+            lambda val: self.ui.labelThresholdValue.setText(str(val))
+        )
+        
+        # Connect shape selection to parameter page switching
+        self.ui.comboShapeSelection.currentTextChanged.connect(self.switch_hough_params_page)
+        
+        # Connect line parameter sliders to value labels
+        self.ui.sliderMinLineLength.valueChanged.connect(
+            lambda val: self.ui.labelMinLineLengthValue.setText(str(val))
+        )
+        self.ui.sliderMaxLineGap.valueChanged.connect(
+            lambda val: self.ui.labelMaxLineGapValue.setText(str(val))
+        )
+        
+        # Connect circle parameter sliders to value labels
+        self.ui.sliderCircleMinRadius.valueChanged.connect(
+            lambda val: self.ui.labelCircleMinRadiusValue.setText(str(val))
+        )
+        self.ui.sliderCircleMaxRadius.valueChanged.connect(
+            lambda val: self.ui.labelCircleMaxRadiusValue.setText(str(val))
+        )
+        self.ui.sliderCircleMinDist.valueChanged.connect(
+            lambda val: self.ui.labelCircleMinDistValue.setText(str(val))
+        )
+        
+        # Connect ellipse parameter sliders to value labels
+        self.ui.sliderEllipseMinArea.valueChanged.connect(
+            lambda val: self.ui.labelEllipseMinAreaValue.setText(str(val))
+        )
+        self.ui.sliderEllipseMaxArea.valueChanged.connect(
+            lambda val: self.ui.labelEllipseMaxAreaValue.setText(str(val))
+        )
+        
+        # Connect common parameter sliders to value labels
+        self.ui.sliderCannyLow.valueChanged.connect(
+            lambda val: self.ui.labelCannyLowValue.setText(str(val))
+        )
+        self.ui.sliderCannyHigh.valueChanged.connect(
+            lambda val: self.ui.labelCannyHighValue.setText(str(val))
+        )
+        self.ui.sliderBlurSize.valueChanged.connect(
+            lambda val: self.ui.labelBlurSizeValue.setText(str(val))
+        )
+        
+        # Connect parameter sliders to update_hough_param
+        self.ui.sliderCannyLow.valueChanged.connect(self.update_hough_param)
+        self.ui.sliderCannyHigh.valueChanged.connect(self.update_hough_param)
+        self.ui.sliderBlurSize.valueChanged.connect(self.update_hough_param)
+        self.ui.sliderMinLineLength.valueChanged.connect(self.update_hough_param)
+        self.ui.sliderMaxLineGap.valueChanged.connect(self.update_hough_param)
+        self.ui.sliderCircleMinRadius.valueChanged.connect(self.update_hough_param)
+        self.ui.sliderCircleMaxRadius.valueChanged.connect(self.update_hough_param)
+        self.ui.sliderCircleMinDist.valueChanged.connect(self.update_hough_param)
+        self.ui.sliderEllipseMinArea.valueChanged.connect(self.update_hough_param)
+        self.ui.sliderEllipseMaxArea.valueChanged.connect(self.update_hough_param)
+        
+        # Display correct parameter page for initial shape
+        self.switch_hough_params_page(self.ui.comboShapeSelection.currentText())
+
+    def update_hough_param(self):
+        """Update Hough Transform parameters based on UI controls"""
+        sender = self.sender()
+        if sender is None:
+            return
+            
+        # Map UI control names to parameter names
+        param_map = {
+            'sliderCannyLow': 'canny_low',
+            'sliderCannyHigh': 'canny_high',
+            'sliderBlurSize': 'blur_size',
+            'sliderMinLineLength': 'line_min_length',
+            'sliderMaxLineGap': 'line_max_gap',
+            'sliderCircleMinRadius': 'circle_min_radius',
+            'sliderCircleMaxRadius': 'circle_max_radius',
+            'sliderCircleMinDist': 'circle_min_dist'
+        }
+        
+        # Get the parameter name based on the sender object's name
+        sender_name = sender.objectName()
+        if sender_name in param_map:
+            param_name = param_map[sender_name]
+            value = sender.value()
+            
+            # Handle special cases
+            if param_name == 'blur_size' and value % 2 == 0:
+                # Blur size must be odd
+                value += 1
+                sender.setValue(value)
+                
+            # Send the parameter update
+            pub.sendMessage("hough.updateParams", param_name=param_name, value=value)
+            logging.debug(f"Updated {param_name} to {value}")
+
+    def switch_hough_params_page(self, shape_type):
+        """Switch the stacked widget page based on shape selection"""
+        if shape_type == "Line":
+            self.ui.stackedWidgetShapeParams.setCurrentIndex(0)
+        elif shape_type == "Circle":
+            self.ui.stackedWidgetShapeParams.setCurrentIndex(1)
+        elif shape_type == "Ellipse":
+            self.ui.stackedWidgetShapeParams.setCurrentIndex(2)
 
     def _setup_mouse_tracking(self):
         # Enable mouse tracking on the image label
@@ -207,7 +344,7 @@ class MainWindowUI(QMainWindow):
         image_y = max(0, min(image_y, img_height - 1))
         
         return (image_x, image_y)
-
+    
     def set_contour(self):
         center = (self.ui.spinBoxPosX.value(), self.ui.spinBoxPosY.value())
         radius = self.ui.spinBoxRadius.value()
@@ -223,6 +360,7 @@ class MainWindowUI(QMainWindow):
         if filename:
             self.image = QPixmap(filename)
             logging.info(f"Loaded image: {filename}, size: {self.image.width()}x{self.image.height()}")
+            self.image_output = None
             self.display_image()
             self._init_modes()
 
@@ -269,6 +407,21 @@ class MainWindowUI(QMainWindow):
         self.image_output = pixmap
         self.display_image()
         logging.info("Updated snake output display")
+
+    def set_hough_output(self, image_result):
+        """Handle the Hough Transform processing result"""
+        if image_result is None:
+            logging.error("Received None output for Hough Transform")
+            return
+        
+        # Re-enable the apply button
+        self.ui.btnApplyHough.setEnabled(True)
+        
+        # Convert result to QPixmap and display
+        pixmap = self.from_ndarray_to_QPixmap(image_result)
+        self.image_output = pixmap
+        self.display_image()
+        logging.info("Updated Hough Transform output display")
 
     def display_image(self):
         if self.image_output is not None:
@@ -328,138 +481,87 @@ class MainWindowUI(QMainWindow):
     def clear_logging(self):
         self.ui.loggingLabel.setText("")
 
-
     def apply_hough_transform(self):
         """Apply Hough Transform based on user-selected parameters."""
         if self.image is None:
             logging.warning("No image loaded for Hough Transform")
+            pub.sendMessage("ui.logging", message="Error: No image loaded")
             return
 
-        # Get user inputs
+        # Get basic parameters
         shape_type = self.ui.comboShapeSelection.currentText()
         threshold = self.ui.sliderHoughThreshold.value()
-
-        # Convert QPixmap to NumPy array
-        image_np = self.get_NumpyArray()
-        gray_image = cv2.cvtColor(image_np[:, :, :3], cv2.COLOR_BGR2GRAY)  # Convert to grayscale
-
-        # Apply edge detection
-        edges = cv2.Canny(gray_image, 50, 150)
-
-        # Perform Hough Transform based on selected shape
-        if shape_type == "Line":
-            result_image = self.detect_and_draw_lines(image_np, threshold=threshold)
-        elif shape_type == "Circle":
-            result_image = self.detect_and_draw_hough_circles(image_np, edges)
-        elif shape_type == "Ellipse":
-            result_image = self.detect_and_draw_hough_ellipses(image_np, edges)
-        else:
-            logging.error("Invalid shape type selected")
-            return
-
-        # Convert result back to QPixmap and display
-        self.image_output = self.from_ndarray_to_QPixmap(result_image)
-        self.display_image()
-
-
-    def detect_and_draw_lines(self, original_image, threshold=150, theta_res=1, rho_res=1):
-        # Convert the image to grayscale for edge detection
-        if original_image.ndim == 3:
-            gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
-        else:
-            gray_image = original_image
-
-        # Apply Canny edge detection
-        edges = cv2.Canny(gray_image, 50, 150)
-
-        # Get image dimensions
-        height, width = edges.shape
-
-        # Calculate the maximum possible value for rho (image diagonal)
-        diagonal = int(np.sqrt(height ** 2 + width ** 2))
-
-        # Define rho and theta ranges
-        rhos = np.arange(-diagonal, diagonal, rho_res)
-        thetas = np.deg2rad(np.arange(-90, 90, theta_res))
-
-        # Create the accumulator array (votes)
-        accumulator = np.zeros((len(rhos), len(thetas)), dtype=np.int32)
-
-        # Get edge points
-        edge_points = np.argwhere(edges > 0)
-
-        # Precompute cos(theta) and sin(theta) values
-        cos_thetas = np.cos(thetas)
-        sin_thetas = np.sin(thetas)
-
-        # Voting process (optimized)
-        for y, x in edge_points:  # For each edge pixel
-            rhos_calc = (x * cos_thetas + y * sin_thetas).astype(int)  # Compute rho values for all thetas at once
-            rho_indices = np.clip(rhos_calc + diagonal, 0, len(rhos) - 1)  # Map rho to index
-            accumulator[rho_indices, np.arange(len(thetas))] += 1  # Increment votes in one operation
-
-        # Extract lines based on threshold
-        detected_lines = np.argwhere(accumulator > threshold)
-
-        # Create a copy of the original image to draw lines on
-        processed_image = original_image.copy()
-
-        # Draw the detected lines
-        for rho_idx, theta_idx in detected_lines:
-            rho = rhos[rho_idx]
-            theta = thetas[theta_idx]
-
-            # Convert (rho, theta) to two points for line drawing
-            a = np.cos(theta)
-            b = np.sin(theta)
-            x0 = a * rho
-            y0 = b * rho
-            x1 = int(x0 + 1000 * (-b))
-            y1 = int(y0 + 1000 * (a))
-            x2 = int(x0 - 1000 * (-b))
-            y2 = int(y0 - 1000 * (a))
-
-            # Draw the line on the processed image
-            cv2.line(processed_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
-
-        return processed_image
-
-
-
-    def detect_and_draw_hough_circles(self, image_np, edges):
-        # Work on a copy of the original image
-        output_image = image_np.copy()
-
-        # Find contours in the edge map
-        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Iterate over contours
-        for contour in contours:
-            if len(contour) >= 5:  # Minimum number of points required to fit a circle
-                # Fit a minimum enclosing circle to the contour
-                (x, y), radius = cv2.minEnclosingCircle(contour)
-                center = (int(x), int(y))
-                radius = int(radius)
-
-                # Draw the circle on the output image
-                cv2.circle(output_image, center, radius, (0, 255, 0), 2)
-
-        return output_image
-
-
-
-
-
-
-    def detect_and_draw_hough_ellipses(self, image_np, edges):
-        output_image = image_np.copy()  # Work on a copy of the original image
-        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        for contour in contours:
-            if len(contour) >= 5:  # Minimum number of points required to fit an ellipse
-                ellipse = cv2.fitEllipse(contour)
-                cv2.ellipse(output_image, ellipse, (0, 255, 0), 2)  # Draw in green
-        return output_image
-
-    
-
-
+        
+        logging.info(f"Requesting Hough Transform: shape={shape_type}, threshold={threshold}")
+        
+        # Disable button while processing
+        self.ui.btnApplyHough.setEnabled(False)
+        pub.sendMessage("ui.logging", message="Processing...")
+        
+        try:
+            # First update all the parameters individually
+            # Common parameters for all shapes
+            if hasattr(self.ui, 'sliderCannyLow'):
+                pub.sendMessage("hough.updateParams", 
+                               param_name="canny_low", 
+                               value=self.ui.sliderCannyLow.value())
+            
+            if hasattr(self.ui, 'sliderCannyHigh'):
+                pub.sendMessage("hough.updateParams", 
+                               param_name="canny_high", 
+                               value=self.ui.sliderCannyHigh.value())
+            
+            if hasattr(self.ui, 'sliderBlurSize'):
+                blur_size = self.ui.sliderBlurSize.value()
+                if blur_size % 2 == 0:
+                    blur_size += 1
+                pub.sendMessage("hough.updateParams", 
+                               param_name="blur_size", 
+                               value=blur_size)
+            
+            # Shape-specific parameters
+            if shape_type == "Line":
+                if hasattr(self.ui, 'sliderMinLineLength'):
+                    pub.sendMessage("hough.updateParams", 
+                                   param_name="line_min_length", 
+                                   value=self.ui.sliderMinLineLength.value())
+                
+                if hasattr(self.ui, 'sliderMaxLineGap'):
+                    pub.sendMessage("hough.updateParams", 
+                                   param_name="line_max_gap", 
+                                   value=self.ui.sliderMaxLineGap.value())
+            
+            elif shape_type == "Circle":
+                if hasattr(self.ui, 'sliderCircleMinRadius'):
+                    pub.sendMessage("hough.updateParams", 
+                                   param_name="circle_min_radius", 
+                                   value=self.ui.sliderCircleMinRadius.value())
+                
+                if hasattr(self.ui, 'sliderCircleMaxRadius'):
+                    pub.sendMessage("hough.updateParams", 
+                                   param_name="circle_max_radius", 
+                                   value=self.ui.sliderCircleMaxRadius.value())
+                
+                if hasattr(self.ui, 'sliderCircleMinDist'):
+                    pub.sendMessage("hough.updateParams", 
+                                   param_name="circle_min_dist", 
+                                   value=self.ui.sliderCircleMinDist.value())
+            
+            elif shape_type == "Ellipse":
+                if hasattr(self.ui, 'sliderEllipseMinArea'):
+                    pub.sendMessage("hough.updateParams", 
+                                   param_name="ellipse_min_area", 
+                                   value=self.ui.sliderEllipseMinArea.value())
+                
+                if hasattr(self.ui, 'sliderEllipseMaxArea'):
+                    pub.sendMessage("hough.updateParams", 
+                                   param_name="ellipse_max_area", 
+                                   value=self.ui.sliderEllipseMaxArea.value())
+            
+            # Now send the process command with just the basic parameters
+            pub.sendMessage("hough.apply", shape_type=shape_type, threshold=threshold)
+            
+        except Exception as e:
+            logging.error(f"Error in apply_hough_transform: {e}")
+            self.ui.btnApplyHough.setEnabled(True)
+            pub.sendMessage("ui.logging", message=f"Error: {str(e)}")
