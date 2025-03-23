@@ -34,11 +34,13 @@ class MainWindowUI(QMainWindow):
         self.last_pos = None
         self._setup_mouse_tracking()  # Initialize mouse tracking
 
+
     def _bind_events(self):
         pub.subscribe(self.set_snake_output, "image.snakeResult")
         pub.subscribe(self.set_initial_contour, "image.initialContour")
         pub.subscribe(self.add_logging, "ui.logging")
         pub.subscribe(self.clear_logging, "ui.clearLogging")
+
 
     def _bind_ui_events(self):
         self.ui.btnLoadImage.clicked.connect(self.upload_image)
@@ -48,12 +50,29 @@ class MainWindowUI(QMainWindow):
         self.ui.spinBoxPosY.valueChanged.connect(self.set_contour)
         self.ui.spinBoxRadius.valueChanged.connect(self.set_contour)
         self.ui.btnApplySnake.clicked.connect(self.apply_snake)
-        self.ui.btnApplyHough.clicked.connect(self.apply_hough_transform)
+        self.ui.btnApplyEdgeDetection.clicked.connect(self.applyEdgeDetection)
 
+    
+    def applyEdgeDetection(self):
+        try:
+            sigmaValue = self.ui.sliderSigma.value()
+            highThreshold = self.ui.sliderHighThreshold.value()
+            lowThreshold = self.ui.sliderLowThreshold.value()
+
+            print(sigmaValue)
+            print(highThreshold)
+            print(lowThreshold)
+
+            pub.sendMessage("detect edges", image=self.image ,sigmaValue=sigmaValue, highThreshold=highThreshold, lowThreshold=lowThreshold)
         
+        except Exception as e:
+            logging.error(f"Error applying edge detection algorithm: {e}")
+            print(e)
+
     def _init_modes(self):
         if "tabSnakeContour" == self.ui.tabWidget.currentWidget().objectName():
             self.init_snake_mode()
+
 
     def init_snake_mode(self):
         if self.image is None:
@@ -74,6 +93,7 @@ class MainWindowUI(QMainWindow):
             self.ui.spinBoxRadius.setValue(min(width, height) // 4)
             self.set_contour()
 
+
     def _setup_mouse_tracking(self):
         # Enable mouse tracking on the image label
         self.ui.ImageLabel.setMouseTracking(True)
@@ -87,6 +107,7 @@ class MainWindowUI(QMainWindow):
         self.ui.ImageLabel.mouseMoveEvent = self._mouse_move_event
         self.ui.ImageLabel.mouseReleaseEvent = self._mouse_release_event
         self.ui.ImageLabel.wheelEvent = self._wheel_event
+
 
     def _mouse_press_event(self, event):
         if self.image is None:
@@ -110,6 +131,7 @@ class MainWindowUI(QMainWindow):
             self.dragging = True
             self.last_pos = pos
             logging.info(f"Starting center drag from ({center_x}, {center_y})")
+
 
     def _mouse_move_event(self, event):
         if self.image is None or not self.dragging:
@@ -140,11 +162,13 @@ class MainWindowUI(QMainWindow):
         # Update last position
         self.last_pos = pos
 
+
     def _mouse_release_event(self, event):
         if self.dragging:
             logging.info("Mouse drag ended")
             self.dragging = False
             self.last_pos = None
+
 
     def _wheel_event(self, event):
         """Handle mouse wheel events to adjust the contour radius"""
@@ -177,6 +201,7 @@ class MainWindowUI(QMainWindow):
         # Prevent event from being passed to parent widgets
         event.accept()
 
+
     def _convert_pos_to_image_coords(self, pos):
         """Convert screen coordinates to image coordinates"""
         if self.image is None:
@@ -208,15 +233,18 @@ class MainWindowUI(QMainWindow):
         
         return (image_x, image_y)
 
+
     def set_contour(self):
         center = (self.ui.spinBoxPosX.value(), self.ui.spinBoxPosY.value())
         radius = self.ui.spinBoxRadius.value()
         logging.info(f"Setting contour: center={center}, radius={radius}")
         pub.sendMessage("snake.setContour", center=center, radius=radius)
     
+
     def set_initial_contour(self, image_contour):
         self.image_output = self.from_ndarray_to_QPixmap(image_contour)
         self.display_image()
+
 
     def upload_image(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
@@ -226,9 +254,12 @@ class MainWindowUI(QMainWindow):
             self.display_image()
             self._init_modes()
 
+
+
     def get_QPixmap(self):
         return self.image
-    
+
+
     def get_NumpyArray(self):
         if self.image is None:
             logging.error("Attempted to get NumPy array from None image")
