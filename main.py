@@ -4,10 +4,12 @@ from MainWindowUI import MainWindowUI
 import asyncio
 from qasync import QEventLoop
 from snake_2 import SnakeContour
+from Hough_transform import HoughTransform
 from Canny import CannyFilter
 
 async def main():
     snake = SnakeContour()
+    hough = HoughTransform()
     canny = CannyFilter()
     
     app = QApplication(sys.argv)
