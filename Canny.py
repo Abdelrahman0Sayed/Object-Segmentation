@@ -41,6 +41,26 @@ class CannyFilter :
 
         # Publish the result to the main window
         pub.sendMessage("canny.output", image=edgyImage)
+
+    def cannyOperatorNOGUI(self, image, sigmaValue, highThreshold, lowThreshold):
+        # Define Paramters
+        kernelSize= (5, 5)
+        # Check if the image is already grayscale
+        if len(image.shape) == 3 and image.shape[2] == 3:
+            grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            grayImage = image
+
+        # First : Apply Gaussian Filter.
+        filteredImage = cv2.GaussianBlur(grayImage, kernelSize, sigmaX=sigmaValue) 
+        # Second : Apply Gradient Operator + Double Thresholding.
+        edgyImage, orientation, x_edges_image, y_edges_image = self.gradientOperator(filteredImage)
+        # Third : Apply non-maximum supperssion.
+        edgyImage = self.nonMaximumSuppression(edgyImage, orientation)
+        # Fourth : Apply Double Thresholding and Hystersis.
+        edgyImage = self.DoubleThresholdingAndHysteresis(edgyImage, highThreshold, lowThreshold)
+
+        return edgyImage
         
 
     def gradientOperator(self, filteredImage):

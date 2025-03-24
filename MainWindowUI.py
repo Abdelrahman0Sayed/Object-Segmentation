@@ -77,6 +77,8 @@ class MainWindowUI(QMainWindow):
             print(e)
 
     def _init_modes(self):
+        self.image_output = None
+        self.clear_logging()
         if "tabSnakeContour" == self.ui.tabWidget.currentWidget().objectName():
             self.init_snake_mode()
         elif "tabHough" == self.ui.tabWidget.currentWidget().objectName():
@@ -86,6 +88,9 @@ class MainWindowUI(QMainWindow):
 
 
     def init_snake_mode(self):
+        """Initialize Snake Contour mode"""
+        self.image_output = None
+        self.display_image()
         if self.image is None:
             logging.warning("No image loaded for snake mode")
             return
@@ -115,12 +120,16 @@ class MainWindowUI(QMainWindow):
 
     def init_edge_detection_mode(self):
         """Initialize Edge Detection mode"""
+        self.image_output = None
+        self.display_image()
         if self.image is None:
             logging.warning("No image loaded for Edge Detection mode")
             return
 
     def init_hough_mode(self):
         """Initialize Hough Transform mode"""
+        self.image_output = None
+        self.display_image()
         if self.image is None:
             logging.warning("No image loaded for Hough Transform mode")
             return
@@ -563,18 +572,18 @@ class MainWindowUI(QMainWindow):
         try:
             # First update all the parameters individually
             # Common parameters for all shapes
-            if hasattr(self.ui, 'sliderCannyLow'):
+            if hasattr(self.ui, 'sliderLowHoughCanny'):
                 pub.sendMessage("hough.updateParams", 
                                param_name="canny_low", 
-                               value=self.ui.sliderCannyLow.value())
+                               value=self.ui.sliderLowHoughCanny.value())
             
-            if hasattr(self.ui, 'sliderCannyHigh'):
+            if hasattr(self.ui, 'sliderHighHoughCanny'):
                 pub.sendMessage("hough.updateParams", 
                                param_name="canny_high", 
-                               value=self.ui.sliderCannyHigh.value())
+                               value=self.ui.sliderHighHoughCanny.value())
             
-            if hasattr(self.ui, 'sliderBlurSize'):
-                blur_size = self.ui.sliderBlurSize.value()
+            if hasattr(self.ui, 'sliderSigmaHoughCanny'):
+                blur_size = self.ui.sliderSigmaHoughCanny.value()
                 if blur_size % 2 == 0:
                     blur_size += 1
                 pub.sendMessage("hough.updateParams", 

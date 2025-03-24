@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from pubsub import pub
 import logging
-
+from Canny import CannyFilter
 class HoughTransform:
     def __init__(self):
         self.img_original = None
@@ -32,6 +32,8 @@ class HoughTransform:
         self.ellipse_max_area = 10000
         self.ellipse_min_points = 5
         
+        self.cannyFilter = CannyFilter()
+
         # Subscribe to events
         pub.subscribe(self.load_image, "hough.loadImage")
         pub.subscribe(self.process_shape, "hough.apply")
@@ -89,12 +91,13 @@ class HoughTransform:
             
         # Apply edge detection
         edges = cv2.Canny(blurred, self.canny_low, self.canny_high)
+        # edges = self.cannyFilter.cannyOperatorNOGUI(gray_image, 1, self.canny_high, self.canny_low)
         
         # Process based on shape type
         if shape_type == "Line":
             result_image = self.detect_lines(edges, threshold)
         elif shape_type == "Circle":
-            result_image = self.detect_circles(blurred, threshold)  # Use blurred for HoughCircles
+            result_image = self.detect_circles(edges, threshold)  # Use blurred for HoughCircles
         elif shape_type == "Ellipse":
             result_image = self.detect_ellipses(edges, threshold)
         else:
