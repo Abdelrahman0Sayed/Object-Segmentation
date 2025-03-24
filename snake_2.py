@@ -13,7 +13,7 @@ try:
         cy_contour_iteration, cy_calculate_perimeter,
         cy_calculate_polygon_area, cy_get_chain_code
     )
-    USE_CYTHON = True
+    USE_CYTHON = False
     print("Using Cython-optimized snake algorithm")
 except ImportError:
     USE_CYTHON = False
