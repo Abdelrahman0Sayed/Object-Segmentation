@@ -77,8 +77,31 @@ class CannyFilter :
     """
     Apply Kernels to the images and return the Horizontal edges, Vertical edges and filtered image
     """ 
-    def applyKernelForLoop(self, image, kernels):
-        pass
+    def applyKernelForLoop(image, kernels):
+        height, width = image.shape
+        x_edges_image = np.zeros_like(image, dtype=np.float32)
+        y_edges_image = np.zeros_like(image, dtype=np.float32)
+        edgyImage = np.zeros_like(image, dtype=np.float32)
+        orientation = np.zeros_like(image, dtype=np.float32)
+
+        kernelX = kernels['KernelX']
+        kernelY = kernels['KernelY']
+        kH, kW = kernelX.shape
+
+        padH, padW = kH // 2, kW // 2
+        padded_image = np.pad(image, ((padH, padH), (padW, padW)), mode='constant', constant_values=0)
+
+        for i in range(height):
+            for j in range(width):
+                region = padded_image[i:i + kH, j:j + kW]
+                Gx = np.sum(region * kernelX)
+                Gy = np.sum(region * kernelY)
+                x_edges_image[i, j] = Gx
+                y_edges_image[i, j] = Gy
+                edgyImage[i, j] = np.sqrt(Gx ** 2 + Gy ** 2)
+                orientation[i, j] = np.arctan2(Gy, Gx)
+
+        return edgyImage, orientation, x_edges_image, y_edges_image
 
     def applyKernelFT(self, image, kernels):
         height, width = image.shape  
