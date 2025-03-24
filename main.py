@@ -3,12 +3,12 @@ from PyQt6.QtWidgets import QApplication
 from MainWindowUI import MainWindowUI
 import asyncio
 from qasync import QEventLoop
-from snake_2 import SnakeContour
+from snake_2 import SnakeProcessor
 from Hough_transform import HoughTransform
 from Canny import CannyFilter
 
 async def main():
-    snake = SnakeContour()
+    snake = SnakeProcessor()
     hough = HoughTransform()
     canny = CannyFilter()
     

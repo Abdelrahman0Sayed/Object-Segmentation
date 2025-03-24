@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QSlider
 from PyQt6 import uic
 from PyQt6.QtWidgets import QFileDialog
 from PyQt6.QtGui import QPixmap, QImage, QPainter, QPen, QColor
@@ -151,6 +151,10 @@ class MainWindowUI(QMainWindow):
         self.ui.comboShapeSelection.currentTextChanged.connect(self.switch_hough_params_page)
         
         # Connect line parameter sliders to value labels
+        self.ui.sliderMinLineLength = QSlider(Qt.Orientation.Horizontal)
+        self.ui.sliderMinLineLength.setValue(10)
+        self.ui.sliderMaxLineGap = QSlider(Qt.Orientation.Horizontal)
+        self.ui.sliderMaxLineGap.setValue(10)
         self.ui.sliderMinLineLength.valueChanged.connect(
             lambda val: self.ui.labelMinLineLengthValue.setText(str(val))
         )

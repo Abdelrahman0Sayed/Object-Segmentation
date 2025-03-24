@@ -1428,91 +1428,7 @@ TalkingUI &gt; QFrame {
             <number>2</number>
            </property>
            <widget class="QWidget" name="pageLineParams">
-            <layout class="QFormLayout" name="formLayoutLine">
-             <item row="0" column="0">
-              <widget class="QLabel" name="labelMinLineLength">
-               <property name="text">
-                <string>Min Line Length:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout_5">
-               <item>
-                <widget class="QSlider" name="sliderMinLineLength">
-                 <property name="minimum">
-                  <number>5</number>
-                 </property>
-                 <property name="maximum">
-                  <number>200</number>
-                 </property>
-                 <property name="value">
-                  <number>30</number>
-                 </property>
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="labelMinLineLengthValue">
-                 <property name="minimumSize">
-                  <size>
-                   <width>30</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>30</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="labelMaxLineGap">
-               <property name="text">
-                <string>Max Line Gap:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout_6">
-               <item>
-                <widget class="QSlider" name="sliderMaxLineGap">
-                 <property name="maximum">
-                  <number>50</number>
-                 </property>
-                 <property name="value">
-                  <number>10</number>
-                 </property>
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="labelMaxLineGapValue">
-                 <property name="minimumSize">
-                  <size>
-                   <width>30</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>10</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
+            <layout class="QFormLayout" name="formLayoutLine"/>
            </widget>
            <widget class="QWidget" name="pageCircleParams">
             <layout class="QFormLayout" name="formLayoutCircle">
@@ -2173,38 +2089,6 @@ TalkingUI &gt; QFrame {
     <hint type="destinationlabel">
      <x>943</x>
      <y>185</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sliderMinLineLength</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>labelMinLineLengthValue</receiver>
-   <slot>setNum(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>896</x>
-     <y>228</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>933</x>
-     <y>229</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sliderMaxLineGap</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>labelMaxLineGapValue</receiver>
-   <slot>setNum(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>896</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>933</x>
-     <y>261</y>
     </hint>
    </hints>
   </connection>

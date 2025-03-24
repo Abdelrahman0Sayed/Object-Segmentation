@@ -6,7 +6,8 @@ extensions = [
     Extension(
         "active_contour",
         ["active_contour.pyx"],
-        include_dirs=[numpy.get_include()]
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O3"],  # Optimization level
     ),
     Extension(
         "hough_transform",
