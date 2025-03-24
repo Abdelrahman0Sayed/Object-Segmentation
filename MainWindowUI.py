@@ -51,7 +51,7 @@ class MainWindowUI(QMainWindow):
     def _bind_ui_events(self):
         self.ui.btnLoadImage.clicked.connect(self.upload_image)
         self.ui.btnReset.clicked.connect(self.reset_image)
-        self.ui.tabWidget.currentChanged.connect(self.on_tab_changed)  # Modify this line
+        self.ui.tabWidget.currentChanged.connect(self._init_modes)  # Modify this line
         self.ui.spinBoxPosX.valueChanged.connect(self.set_contour)
         self.ui.spinBoxPosY.valueChanged.connect(self.set_contour)
         self.ui.spinBoxRadius.valueChanged.connect(self.set_contour)
@@ -79,6 +79,10 @@ class MainWindowUI(QMainWindow):
     def _init_modes(self):
         if "tabSnakeContour" == self.ui.tabWidget.currentWidget().objectName():
             self.init_snake_mode()
+        elif "tabHough" == self.ui.tabWidget.currentWidget().objectName():
+            self.init_hough_mode()
+        elif "tabEdgeDetection" == self.ui.tabWidget.currentWidget().objectName():
+            self.init_edge_detection_mode()
 
 
     def init_snake_mode(self):
