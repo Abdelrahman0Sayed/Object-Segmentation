@@ -3,6 +3,8 @@ import numpy as np
 from pubsub import pub
 import logging
 from Canny import CannyFilter
+import hough_transform  # Import our Cython module
+
 class HoughTransform:
     def __init__(self):
         self.img_original = None
@@ -95,11 +97,14 @@ class HoughTransform:
         
         # Process based on shape type
         if shape_type == "Line":
-            result_image = self.detect_lines(edges, threshold)
+            result_image, count = self.detect_lines(edges, threshold)
+            logging.info(f"Detected {count} lines")
         elif shape_type == "Circle":
-            result_image = self.detect_circles(edges, threshold)  # Use blurred for HoughCircles
+            result_image, count = self.detect_circles(blurred,edges, threshold)  # Use blurred for HoughCircles
+            logging.info(f"Detected {count} circles")
         elif shape_type == "Ellipse":
-            result_image = self.detect_ellipses(edges, threshold)
+            result_image, count = self.detect_ellipses(edges, threshold)
+            logging.info(f"Detected {count} ellipses")
         else:
             logging.error(f"Invalid shape type: {shape_type}")
             pub.sendMessage("ui.logging", message="Error: Invalid shape type")
@@ -114,63 +119,40 @@ class HoughTransform:
         pub.sendMessage("ui.logging", message=f"{shape_type} detection complete")
     
     def detect_lines(self, edges, threshold):
-        """Detect and draw lines using Hough Transform"""
-        output_image = self.img_original.copy()
-        
-        # Using OpenCV's HoughLinesP for better performance and control
-        lines = cv2.HoughLinesP(
-            edges, 
-            rho=self.line_rho,
-            theta=self.line_theta, 
-            threshold=threshold,
-            minLineLength=self.line_min_length,
-            maxLineGap=self.line_max_gap
+        """Detect and draw lines using Cython implementation of Hough Transform"""
+        return hough_transform.cy_detect_lines(
+            edges,
+            self.img_original,
+            threshold,
+            self.line_rho,
+            self.line_theta,
+            self.line_min_length,
+            self.line_max_gap
         )
         
-        line_count = 0
-        if lines is not None:
-            for line in lines:
-                x1, y1, x2, y2 = line[0]
-                cv2.line(output_image, (x1, y1), (x2, y2), (0, 0, 255), 2, cv2.LINE_AA)
-                line_count += 1
-        
-        logging.info(f"Detected {line_count} lines")
-        return output_image
-        
-    def detect_circles(self, gray_image, threshold):
-        """Detect and draw circles using Hough Transform"""
-        output_image = self.img_original.copy()
-        
-        # Using OpenCV's HoughCircles for better control
-        # Ensure param2 is positive
-        param2_value = max(1, threshold)  # Ensure a minimum value of 1
-        circles = cv2.HoughCircles(
+    def detect_circles(self, gray_image,edges, threshold):
+        """Detect and draw circles using Cython implementation of Hough Transform"""
+        return hough_transform.cy_detect_circles(
             gray_image,
-            cv2.HOUGH_GRADIENT,
-            dp=1,
-            minDist=self.circle_min_dist,
-            param1=self.circle_param1,
-            param2=param2_value,  # Use threshold with minimum value check
-            minRadius=self.circle_min_radius,
-            maxRadius=self.circle_max_radius
+            edges,
+            self.img_original,
+            threshold,
+            self.circle_min_dist,
+            self.circle_param1,
+            self.circle_min_radius,
+            self.circle_max_radius
         )
         
-        circle_count = 0
-        if circles is not None:
-            circles = np.uint16(np.around(circles))
-            for circle in circles[0, :]:
-                center = (circle[0], circle[1])
-                radius = circle[2]
-                
-                # Draw the outer circle
-                cv2.circle(output_image, center, radius, (0, 255, 0), 2, cv2.LINE_AA)
-                # Draw the center of the circle
-                cv2.circle(output_image, center, 2, (0, 0, 255), 3, cv2.LINE_AA)
-                circle_count += 1
-        
-        logging.info(f"Detected {circle_count} circles")
-        return output_image
-        
+    # def detect_ellipses(self, edges, threshold):
+    #     """Detect and draw ellipses using Cython implementation of Hough Transform"""
+    #     return hough_transform.cy_detect_ellipses(
+    #         edges,
+    #         self.img_original,
+    #         threshold,
+    #         self.ellipse_min_area,
+    #         self.ellipse_max_area,
+    #         self.ellipse_min_points
+    #     )
     def detect_ellipses(self, edges, threshold):
         """Detect and draw ellipses using Hough Transform"""
         output_image = self.img_original.copy()
@@ -207,4 +189,4 @@ class HoughTransform:
                         pass
         
         logging.info(f"Detected {ellipse_count} ellipses")
-        return output_image
+        return output_image, ellipse_count

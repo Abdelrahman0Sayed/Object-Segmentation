@@ -1,2 +1,10 @@
 __pycache__/
 *.log
+# Cython generated files
+*.c
+*.cpp
+*.so
+*.pyd
+*.html
+build/
+.ipynb_checkpoints/

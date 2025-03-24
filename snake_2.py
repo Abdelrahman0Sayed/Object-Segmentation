@@ -3,6 +3,7 @@ import numpy as np
 from pubsub import pub
 import concurrent.futures
 import asyncio
+import active_contour  # Import the Cython module
 
 
 class ImageProcessor:
@@ -32,7 +33,7 @@ class ImageProcessor:
 
 
 class SnakeContour(ImageProcessor):
-    """Implementation of the active contour algorithm (snake)"""
+    """Implementation of the active contour algorithm (snake) using Cython optimizations"""
     def __init__(self):
         super().__init__()
         # Default parameters
@@ -42,6 +43,8 @@ class SnakeContour(ImageProcessor):
         self.alpha = 9  # Internal energy weight
         self.beta = 9   # External energy weight
         self.gamma = 1  # Balloon energy weight
+        self.gradient_x = None
+        self.gradient_y = None
         self._bind_events()
 
     def _bind_events(self):
@@ -51,6 +54,7 @@ class SnakeContour(ImageProcessor):
         pub.subscribe(self.handel_set_result, "snake.apply")
 
     def set_contour(self, center, radius):
+        """Set new contour parameters and render initial contour"""
         self.center = center
         self.radius = radius
         image = self.render_initial_contour()
@@ -63,23 +67,30 @@ class SnakeContour(ImageProcessor):
                    gamma,
                    center,
                    radius):
+        """Apply snake algorithm with specified parameters using Cython"""
         self.iterations = iterations
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
         self.center = center
         self.radius = radius
-        snake_points, perimeter, area, chain_code = self.process_contour()
+        snake_points, perimeter, area, chain_code = self.process_contour_cython()
         image = self.render_result(snake_points)
-        pub.sendMessage("image.snakeResult", image_result=image, perimeter=perimeter, area=area, chain_code=chain_code)
+        pub.sendMessage("image.snakeResult", 
+                       image_result=image, 
+                       perimeter=perimeter, 
+                       area=area, 
+                       chain_code=chain_code)
 
     def handel_set_result(self, iterations, alpha, beta, gamma, center, radius):
-        pub.sendMessage("ui.logging", message="Processing snake contour...")
+        """Handle UI request to process snake contour in a separate thread"""
+        pub.sendMessage("ui.logging", message="Processing snake contour using Cython acceleration...")
         executor = concurrent.futures.ThreadPoolExecutor()
         loop = asyncio.get_event_loop()
         loop.run_in_executor(executor, self.set_result, iterations, alpha, beta, gamma, center, radius)
 
-    def set_initial_contour(self,image):
+    def set_initial_contour(self, image):
+        """Set initial image and contour center"""
         self.img_original = image
         self.img_grayscale = self.to_grayscale(image)
         self.center = self.get_image_center()
@@ -88,64 +99,17 @@ class SnakeContour(ImageProcessor):
         pub.sendMessage("image.initialContour", image_contour=image)
 
     def create_initial_contour(self, center=None, radius=None):
-        """Generate initial circular contour points"""
+        """Generate initial circular contour points using Cython module"""
         if center is not None:
             self.center = center
         if radius is not None:
             self.radius = radius
             
-        initial_snake = []
-        current_angle = 0
-        resolution = 360 / 1000.0  # 1000 points around circle
-        
-        for i in range(1000):
-            angle = np.array([current_angle], dtype=np.float64)
-            x, y = cv2.polarToCart(
-                np.array([self.radius], dtype=np.float64), 
-                angle, 
-                True
-            )
+        # Use Cython implementation
+        return active_contour.cy_initial_contour(self.center, self.radius)
 
-            y_point = int(y[0][0] + self.center[1])
-            x_point = int(x[0][0] + self.center[0])
-            
-            current_angle += resolution
-            initial_snake.append((x_point, y_point))
-            
-        return initial_snake
-
-    def _calculate_internal_energy(self, pt, prev_pt, next_pt, alpha):
-        """Calculate internal energy based on curvature"""
-        dx1 = pt[0] - prev_pt[0]
-        dy1 = pt[1] - prev_pt[1]
-        dx2 = next_pt[0] - pt[0]
-        dy2 = next_pt[1] - pt[1]
-
-        denominator = pow(dx1*dx1 + dy1*dy1, 1.5)
-        if denominator == 0:
-            return 0  # Handle division by zero
-
-        curvature = (dx1 * dy2 - dx2 * dy1) / denominator
-        return alpha * curvature
-
-    def _calculate_external_energy(self, img, pt, beta):
-        """Calculate external energy based on image gradient"""
-        h, w = img.shape[:2]
-        x, y = pt
-        if 0 <= x < w and 0 <= y < h:
-            # Higher intensity for stronger edges
-            return -beta * img[y, x]
-        else:
-            return 0  # Out-of-bounds points
-
-    def _calculate_balloon_energy(self, pt, prev_pt, gamma):
-        """Calculate balloon energy to inflate/deflate contour"""
-        dx = pt[0] - prev_pt[0]
-        dy = pt[1] - prev_pt[1]
-        return gamma * (dx*dx + dy*dy)
-
-    def process_contour(self):
-        """Main contour processing function"""
+    def process_contour_cython(self):
+        """Process contour using optimized Cython implementation"""
         if self.img_original is None:
             return None, 0, 0, []
         
@@ -155,107 +119,39 @@ class SnakeContour(ImageProcessor):
         # Prepare image for processing
         gray_img = self.img_grayscale.copy()
         gray_img = cv2.blur(gray_img, (5, 5))  # Smooth image
+        
+        # Pre-compute gradient images for faster external energy calculation
+        self.gradient_x = cv2.Sobel(gray_img, cv2.CV_64F, 1, 0, ksize=3)
+        self.gradient_y = cv2.Sobel(gray_img, cv2.CV_64F, 0, 1, ksize=3)
 
-        # Evolve contour through iterations
-        for _ in range(self.iterations):
-            num_points = len(snake_points)
-            new_curve = [None] * num_points
+        # Use Cython implementation for contour evolution
+        snake_points = active_contour.cy_evolve_contour(
+            snake_points,
+            gray_img,
+            self.gradient_x,
+            self.gradient_y,
+            self.iterations,
+            self.alpha,
+            self.beta,
+            self.gamma
+        )
+        
+        # Calculate metrics using Cython
+        perimeter, area = active_contour.cy_calculate_metrics(snake_points)
+        
+        # Calculate chain code using Cython
+        chain_code = active_contour.cy_get_chain_code(snake_points)
 
-            for i in range(num_points):
-                pt = snake_points[i]
-                prev_pt = snake_points[(i - 1 + num_points) % num_points]
-                next_pt = snake_points[(i + 1) % num_points]
-                min_energy = float('inf')
-                new_pt = pt
-
-                # Check all neighboring pixels
-                for dx in range(-1, 2):
-                    for dy in range(-1, 2):
-                        move_pt = (pt[0] + dx, pt[1] + dy)
-                        
-                        # Check boundaries
-                        h, w = gray_img.shape[:2]
-                        if not (0 <= move_pt[0] < w and 0 <= move_pt[1] < h):
-                            continue
-                            
-                        # Calculate energies
-                        internal_e = self._calculate_internal_energy(
-                            move_pt, prev_pt, next_pt, self.alpha)
-                        external_e = self._calculate_external_energy(
-                            gray_img, move_pt, self.beta)
-                        balloon_e = self._calculate_balloon_energy(
-                            move_pt, prev_pt, self.gamma)
-                        
-                        # Total energy
-                        energy = internal_e + external_e + balloon_e
-
-                        # Keep minimum energy point
-                        if energy < min_energy:
-                            min_energy = energy
-                            new_pt = move_pt
-
-                new_curve[i] = new_pt
-
-            snake_points = new_curve
-
-        # Calculate perimeter
-        perimeter = 0
-        for i in range(len(snake_points)):
-            curr = snake_points[i]
-            next_pt = snake_points[(i + 1) % len(snake_points)]
-            dx = curr[0] - next_pt[0]
-            dy = curr[1] - next_pt[1]
-            perimeter += np.sqrt(dx**2 + dy**2)
-
-        # Calculate area
-        contour_array = np.array(snake_points, dtype=np.int32)
-        area = cv2.contourArea(contour_array)
-
-        # Calculate chain code
-        chain_code = self.get_chain_code(snake_points)
+        # Clean up gradients to free memory
+        self.gradient_x = None
+        self.gradient_y = None
 
         return snake_points, perimeter, area, chain_code
 
-    def get_chain_code(self, snake_points):
-        """Calculate the 8-direction chain code of contour"""
-        chain_code = []
-        for i in range(len(snake_points)):
-            current = snake_points[i]
-            next_point = snake_points[(i + 1) % len(snake_points)]
-            
-            # Direction vector
-            dx = next_point[0] - current[0]
-            dy = next_point[1] - current[1]
-            
-            # Normalize direction
-            if dx != 0:
-                dx = dx // abs(dx)
-            if dy != 0:
-                dy = dy // abs(dy)
-                
-            # Convert to 8-direction chain code
-            if dx == 0 and dy == -1:      # North
-                code = 0
-            elif dx == 1 and dy == -1:    # Northeast
-                code = 1
-            elif dx == 1 and dy == 0:     # East
-                code = 2
-            elif dx == 1 and dy == 1:     # Southeast
-                code = 3
-            elif dx == 0 and dy == 1:     # South
-                code = 4
-            elif dx == -1 and dy == 1:    # Southwest
-                code = 5
-            elif dx == -1 and dy == 0:    # West
-                code = 6
-            elif dx == -1 and dy == -1:   # Northwest
-                code = 7
-            else:
-                code = -1  # Invalid direction
-                
-            chain_code.append(code)
-        
-        return chain_code
+    # Replace the old process_contour method
+    def process_contour(self):
+        """Forward to Cython implementation for backward compatibility"""
+        return self.process_contour_cython()
 
     def render_initial_contour(self):
         """Render an image with the initial contour"""
@@ -295,3 +191,8 @@ class SnakeContour(ImageProcessor):
 
         output_img = cv2.cvtColor(output_img, cv2.COLOR_BGR2RGBA)
         return output_img
+
+    # Allow using the old function names for backward compatibility
+    def get_chain_code(self, snake_points):
+        """Calculate chain code using Cython implementation"""
+        return active_contour.cy_get_chain_code(snake_points)
