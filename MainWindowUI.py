@@ -1,8 +1,9 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QSlider
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QSlider,QLabel,QSpacerItem, QSizePolicy
 from PyQt6 import uic
 from PyQt6.QtWidgets import QFileDialog
-from PyQt6.QtGui import QPixmap, QImage, QPainter, QPen, QColor
+from PyQt6.QtGui import QPixmap, QImage, QPainter, QPen, QColor, QFont
 from PyQt6.QtCore import Qt, QTimer, QPointF
+from PyQt6.QtWidgets import QMainWindow, QSpacerItem, QSizePolicy
 from pubsub import pub
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -23,6 +24,18 @@ class MainWindowUI(QMainWindow):
     def __init__(self):
         super(MainWindowUI, self).__init__()
         self.ui = uic.loadUi("image-processing.ui", self)
+        
+        self.ui.verticalLayout_2.setSpacing(30)  # Adjust value as needed
+        self.ui.verticalLayout_2.setContentsMargins(20, 20, 20, 20)
+        
+        self.ui.verticalLayout_3.setSpacing(30)  # Adjust value as needed
+        self.ui.verticalLayout_3.setContentsMargins(20, 20, 20, 20)
+        
+        self.ui.verticalLayout_4.setSpacing(30)  # Adjust value as needed
+        self.ui.verticalLayout_4.setContentsMargins(20, 20, 20, 20)
+        self._setup_tab_layouts()
+        self._setup_tab_fonts()
+        
         self.ui.show()
         self.ui.setWindowTitle("Image Filter")
         self._bind_events()
@@ -34,6 +47,44 @@ class MainWindowUI(QMainWindow):
         self.last_pos = None
         self._setup_mouse_tracking()  # Initialize mouse tracking
 
+    def _setup_tab_layouts(self):
+        # Snake Contour Tab
+        layout = self.ui.tabSnakeContour.layout()
+        spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        layout.removeWidget(self.ui.btnApplySnake)
+        layout.addItem(spacer)
+        layout.addWidget(self.ui.btnApplySnake)
+        
+        # Edge Detection Tab
+        layout = self.ui.tabEdgeDetection.layout()
+        spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        layout.removeWidget(self.ui.btnApplyEdgeDetection)
+        layout.addItem(spacer)
+        layout.addWidget(self.ui.btnApplyEdgeDetection)
+        
+        # Hough Transform Tab
+        layout = self.ui.tabHough.layout()
+        spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        layout.removeWidget(self.ui.btnApplyHough)
+        layout.addItem(spacer)
+        layout.addWidget(self.ui.btnApplyHough)
+    
+    def _setup_tab_fonts(self):
+        """Setup fonts for all tab labels"""
+        # Create font for labels
+        label_font = QFont()
+        label_font.setPointSize(12)  # Adjust size as needed
+        label_font.setBold(True)  # Optional: make labels bold
+        
+        # Apply font to all QLabels in each tab
+        for label in self.ui.tabSnakeContour.findChildren(QLabel):
+            label.setFont(label_font)
+        
+        for label in self.ui.tabEdgeDetection.findChildren(QLabel):
+            label.setFont(label_font)
+        
+        for label in self.ui.tabHough.findChildren(QLabel):
+            label.setFont(label_font)
 
     def _bind_events(self):
         pub.subscribe(self.set_snake_output, "image.snakeResult")
