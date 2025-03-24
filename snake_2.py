@@ -13,7 +13,7 @@ try:
         cy_contour_iteration, cy_calculate_perimeter,
         cy_calculate_polygon_area, cy_get_chain_code
     )
-    USE_CYTHON = False
+    USE_CYTHON = True
     print("Using Cython-optimized snake algorithm")
 except ImportError:
     USE_CYTHON = False
@@ -100,6 +100,7 @@ class SnakeProcessor:
         # Create output image
         result_img = self.display_output_contour(snake_points)
         
+        result_img = cv2.cvtColor(result_img, cv2.COLOR_BGR2RGBA)
         # Create visualization
         self.visualize_results(snake_points, chain_code, perimeter, area)
         
@@ -340,6 +341,7 @@ class SnakeProcessor:
         """Create image with initial contour only"""
         output_img = self.img_original.copy() if self.img_original is not None else np.zeros((700, 800, 3), dtype=np.uint8)
         cv2.circle(output_img, self.center, self.radius, (0, 255, 255), 2)
+        output_img = cv2.cvtColor(output_img, cv2.COLOR_BGR2RGBA)
         return output_img
 
     def get_chain_code(self, snake_points):

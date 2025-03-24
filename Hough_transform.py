@@ -111,8 +111,9 @@ class HoughTransform:
             return
             
         # Convert result to RGBA if needed
-        if result_image.shape[2] == 3:
-            result_image = cv2.cvtColor(result_image, cv2.COLOR_BGR2RGBA)
+        # if result_image.shape[2] == 3:
+        result_image = cv2.cvtColor(result_image, cv2.COLOR_BGR2RGBA)
+            
             
         # Send results back to UI
         pub.sendMessage("hough.result", image_result=result_image)
