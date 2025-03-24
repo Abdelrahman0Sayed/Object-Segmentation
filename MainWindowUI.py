@@ -142,21 +142,21 @@ class MainWindowUI(QMainWindow):
             lambda val: self.ui.labelEllipseMaxAreaValue.setText(str(val))
         )
         
-        # Connect common parameter sliders to value labels
-        self.ui.sliderCannyLow.valueChanged.connect(
-            lambda val: self.ui.labelCannyLowValue.setText(str(val))
-        )
-        self.ui.sliderCannyHigh.valueChanged.connect(
-            lambda val: self.ui.labelCannyHighValue.setText(str(val))
-        )
-        self.ui.sliderBlurSize.valueChanged.connect(
-            lambda val: self.ui.labelBlurSizeValue.setText(str(val))
-        )
+        # # Connect common parameter sliders to value labels
+        # self.ui.sliderCannyLow.valueChanged.connect(
+        #     lambda val: self.ui.labelCannyLowValue.setText(str(val))
+        # )
+        # self.ui.sliderCannyHigh.valueChanged.connect(
+        #     lambda val: self.ui.labelCannyHighValue.setText(str(val))
+        # )
+        # self.ui.sliderBlurSize.valueChanged.connect(
+        #     lambda val: self.ui.labelBlurSizeValue.setText(str(val))
+        # )
         
         # Connect parameter sliders to update_hough_param
-        self.ui.sliderCannyLow.valueChanged.connect(self.update_hough_param)
-        self.ui.sliderCannyHigh.valueChanged.connect(self.update_hough_param)
-        self.ui.sliderBlurSize.valueChanged.connect(self.update_hough_param)
+        # self.ui.sliderCannyLow.valueChanged.connect(self.update_hough_param)
+        # self.ui.sliderCannyHigh.valueChanged.connect(self.update_hough_param)
+        # self.ui.sliderBlurSize.valueChanged.connect(self.update_hough_param)
         self.ui.sliderMinLineLength.valueChanged.connect(self.update_hough_param)
         self.ui.sliderMaxLineGap.valueChanged.connect(self.update_hough_param)
         self.ui.sliderCircleMinRadius.valueChanged.connect(self.update_hough_param)

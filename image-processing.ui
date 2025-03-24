@@ -1425,7 +1425,7 @@ TalkingUI &gt; QFrame {
          <item>
           <widget class="QStackedWidget" name="stackedWidgetShapeParams">
            <property name="currentIndex">
-            <number>0</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="pageLineParams">
             <layout class="QFormLayout" name="formLayoutLine">
@@ -1528,7 +1528,7 @@ TalkingUI &gt; QFrame {
                <item>
                 <widget class="QSlider" name="sliderCircleMinRadius">
                  <property name="minimum">
-                  <number>5</number>
+                  <number>0</number>
                  </property>
                  <property name="maximum">
                   <number>100</number>
@@ -1704,13 +1704,13 @@ TalkingUI &gt; QFrame {
                <item>
                 <widget class="QSlider" name="sliderEllipseMaxArea">
                  <property name="minimum">
-                  <number>1000</number>
+                  <number>1</number>
                  </property>
                  <property name="maximum">
-                  <number>20000</number>
+                  <number>1000</number>
                  </property>
                  <property name="value">
-                  <number>10000</number>
+                  <number>1000</number>
                  </property>
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
