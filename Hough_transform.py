@@ -139,13 +139,15 @@ class HoughTransform:
         output_image = self.img_original.copy()
         
         # Using OpenCV's HoughCircles for better control
+        # Ensure param2 is positive
+        param2_value = max(1, threshold)  # Ensure a minimum value of 1
         circles = cv2.HoughCircles(
             gray_image,
             cv2.HOUGH_GRADIENT,
             dp=1,
             minDist=self.circle_min_dist,
             param1=self.circle_param1,
-            param2=threshold,  # Use the threshold as param2
+            param2=param2_value,  # Use threshold with minimum value check
             minRadius=self.circle_min_radius,
             maxRadius=self.circle_max_radius
         )
