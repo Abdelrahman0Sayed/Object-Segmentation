@@ -98,14 +98,14 @@ class CannyFilter :
 
         x_edges_image = np.fft.ifft2(Gx_edges).real
         y_edges_image = np.fft.ifft2(Gy_edges).real
-        x_edges_image = cv2.normalize(np.abs(x_edges_image), None, 0, 255, cv2.NORM_MINMAX)
-        y_edges_image = cv2.normalize(np.abs(y_edges_image), None, 0, 255, cv2.NORM_MINMAX)
+        #x_edges_image = cv2.normalize(np.abs(x_edges_image), None, 0, 255, cv2.NORM_MINMAX)
+        #y_edges_image = cv2.normalize(np.abs(y_edges_image), None, 0, 255, cv2.NORM_MINMAX)
 
         edgyImage = np.sqrt(x_edges_image ** 2 + y_edges_image ** 2)
         orientation = np.angle(image_FT) 
     
 
-        edgyImage = cv2.normalize(np.abs(edgyImage), None, 0, 255, cv2.NORM_MINMAX)
+        #edgyImage = cv2.normalize(np.abs(edgyImage), None, 0, 255, cv2.NORM_MINMAX)
 
         return edgyImage, orientation, x_edges_image, y_edges_image
 
